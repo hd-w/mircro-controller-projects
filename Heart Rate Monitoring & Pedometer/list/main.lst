@@ -1,0 +1,529 @@
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:24:53 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c LARGE BROWSE DEBUG OBJECTEXTEND PRINT(.\list\main.lst) OBJECT(.\l
+                    -ist\main.obj)
+
+line level    source
+
+   1          #include <stdio.h>
+   2          #include <string.h>
+   3          #include        "config.h"
+   4          #include  <math.h>    //Keil library
+   5          #include        "binary.h"
+   6          #include        "USART1.h"
+   7          #include        "src\delay.h"
+   8          #include        "src\OLED.h"
+   9          #include        "src\BMP_BACKGROUND.h"
+  10          
+  11          
+  12          //#include "stdlib.h"
+  13          
+  14          #define COM_TX1_Lenth   20
+  15          #define COM_RX1_Lenth   20
+  16          
+  17          COMx_Define     COM1;
+  18          u8      idata TX1_Buffer[COM_TX1_Lenth];        //发送缓冲
+  19          u8      xdata RX1_Buffer[COM_RX1_Lenth];        //接收缓冲
+  20          
+  21          
+  22          
+  23          
+  24          sbit LED=P2^5;
+  25          u8 cnt=0;
+  26          u8 p=0;
+  27          u8 BUTTON1 = 0;
+  28          u8 BUTTON2 = 0;
+  29          u8 BUTTON3 = 0;
+  30          
+  31          // button & status machine
+  32          u8 BUTTON1_DELAY= 1;
+  33          u8 BUTTON2_DELAY= 1;
+  34          u8 BUTTON3_DELAY= 1;
+  35          bit BUTTON1_TRIG = 0;
+  36          bit BUTTON2_TRIG = 0;
+  37          bit BUTTON3_TRIG = 0;
+  38          
+  39          u16 timer3_cnt=0;
+  40          u8 led_cnt=0;
+  41          u16 ADC_RESULT = 0;
+  42          u16 BUTTON_ADC_RESULT = 0;
+  43          u16 time = 0;
+  44          u8 xxx=0;
+  45          u8 xx=0;
+  46          u8 x=0;
+  47          u8 y=0;
+  48          u8 yy=0;
+  49          u8 yyy=0;
+  50          u8 yyyy=0;
+  51          u8 xxx_old=0;
+  52          u8 xx_old=0;
+  53          u8 x_old=0;
+  54          u8 y_old=0;
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:24:53 PAGE 2   
+
+  55          u8 yy_old=0;
+  56          u8 yyy_old=0;
+  57          u8 yyyy_old=0;
+  58          u8 clock_flag=0;
+  59          u8 clear_flag=0;
+  60          u8 pp_flag=0;
+  61          /*************  本地函数声明    **************/
+  62          u8 USART_Configuration(u8 UARTx, COMx_InitDefine *COMx)
+  63          {
+  64   1              u16     i;
+  65   1              u32     j;
+  66   1              
+  67   1              if(UARTx == USART1)
+  68   1              {
+  69   2                      COM1.id = 1;
+  70   2                      COM1.TX_read    = 0;
+  71   2                      COM1.TX_write   = 0;
+  72   2                      COM1.B_TX_busy  = 0;
+  73   2                      COM1.RX_Cnt     = 0;
+  74   2                      COM1.RX_TimeOut = 0;
+  75   2                      COM1.B_RX_OK    = 0;
+  76   2                      for(i=0; i<COM_TX1_Lenth; i++)  TX1_Buffer[i] = 0;
+  77   2                      for(i=0; i<COM_RX1_Lenth; i++)  RX1_Buffer[i] = 0;
+  78   2      
+  79   2                      if(COMx->UART_Mode > UART_9bit_BRTx)    return 1;       //模式错误
+  80   2                      if(COMx->UART_Polity == PolityHigh)             PS = 1; //高优先级中断
+  81   2                      else                                                                    PS = 0; //低优先级中断
+  82   2                      SCON = (SCON & 0x3f) | COMx->UART_Mode;
+  83   2                      if((COMx->UART_Mode == UART_9bit_BRTx) ||(COMx->UART_Mode == UART_8bit_BRTx))   //可变波特率
+  84   2                      {
+  85   3                              j = (MAIN_Fosc / 4) / COMx->UART_BaudRate;      //按1T计算
+  86   3                              if(j >= 65536UL)        return 2;       //错误
+  87   3                              j = 65536UL - j;
+  88   3                              if(COMx->UART_BRT_Use == BRT_Timer1)
+  89   3                              {
+  90   4                                      TR1 = 0;
+  91   4                                      AUXR &= ~0x01;          //S1 BRT Use Timer1;
+  92   4                                      TMOD &= ~(1<<6);        //Timer1 set As Timer
+  93   4                                      TMOD &= ~0x30;          //Timer1_16bitAutoReload;
+  94   4                                      AUXR |=  (1<<6);        //Timer1 set as 1T mode
+  95   4                                      TH1 = (u8)(j>>8);
+  96   4                                      TL1 = (u8)j;
+  97   4                                      ET1 = 0;        //禁止中断
+  98   4                                      TMOD &= ~0x40;  //定时
+  99   4                                      INT_CLKO &= ~0x02;      //不输出时钟
+ 100   4                                      TR1  = 1;
+ 101   4                              }
+ 102   3                              else if(COMx->UART_BRT_Use == BRT_Timer2)
+ 103   3                              {
+ 104   4                                      AUXR &= ~(1<<4);        //Timer stop
+ 105   4                                      AUXR |= 0x01;           //S1 BRT Use Timer2;
+ 106   4                                      AUXR &= ~(1<<3);        //Timer2 set As Timer
+ 107   4                                      AUXR |=  (1<<2);        //Timer2 set as 1T mode
+ 108   4                                      TH2 = (u8)(j>>8);
+ 109   4                                      TL2 = (u8)j;
+ 110   4                                      IE2  &= ~(1<<2);        //禁止中断
+ 111   4                                      AUXR &= ~(1<<3);        //定时
+ 112   4                                      AUXR |=  (1<<4);        //Timer run enable
+ 113   4                              }
+ 114   3                              else return 2;  //错误
+ 115   3                      }
+ 116   2                      else if(COMx->UART_Mode == UART_ShiftRight)
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:24:53 PAGE 3   
+
+ 117   2                      {
+ 118   3                              if(COMx->BaudRateDouble == ENABLE)      AUXR |=  (1<<5);        //固定波特率SysClk/2
+ 119   3                              else                                                            AUXR &= ~(1<<5);        //固定波特率SysClk/12
+ 120   3                      }
+ 121   2                      else if(COMx->UART_Mode == UART_9bit)   //固定波特率SysClk*2^SMOD/64
+ 122   2                      {
+ 123   3                              if(COMx->BaudRateDouble == ENABLE)      PCON |=  (1<<7);        //固定波特率SysClk/32
+ 124   3                              else                                                            PCON &= ~(1<<7);        //固定波特率SysClk/64
+ 125   3                      }
+ 126   2                      if(COMx->UART_Interrupt == ENABLE)      ES = 1; //允许中断
+ 127   2                      else                                                            ES = 0; //禁止中断
+ 128   2                      if(COMx->UART_RxEnable == ENABLE)       REN = 1;        //允许接收
+ 129   2                      else                                                            REN = 0;        //禁止接收
+ 130   2                      P_SW1 = (P_SW1 & 0x3f) | (COMx->UART_P_SW & 0xc0);      //切换IO
+ 131   2                      if(COMx->UART_RXD_TXD_Short == ENABLE)  PCON2 |=  (1<<4);       //内部短路RXD与TXD, 做中继, ENABLE,DISABLE
+ 132   2                      else                                                                    PCON2 &= ~(1<<4);
+ 133   2                      return  0;
+ 134   2              }
+ 135   1              return 3;       //其它错误
+ 136   1      }
+ 137          
+ 138          
+ 139          /*************** 装载串口发送缓冲 *******************************/
+ 140          
+ 141          void TX1_write2buff(u8 dat)     //写入发送缓冲，指针+1
+ 142          {
+ 143   1              TX1_Buffer[COM1.TX_write] = dat;        //装发送缓冲
+ 144   1              if(++COM1.TX_write >= COM_TX1_Lenth)    COM1.TX_write = 0;
+ 145   1      
+ 146   1              if(COM1.B_TX_busy == 0)         //空闲
+ 147   1              {  
+ 148   2                      COM1.B_TX_busy = 1;             //标志忙
+ 149   2                      TI = 1;                                 //触发发送中断
+ 150   2              }
+ 151   1      }
+ 152          
+ 153          void PrintString1(u8 *puts)
+ 154          {
+ 155   1          for (; *puts != 0;  puts++)  TX1_write2buff(*puts);         //遇到停止符0结束
+ 156   1      }
+ 157          
+ 158          
+ 159          /********************* UART1中断函数************************/
+ 160          void UART1_int (void) interrupt UART1_VECTOR
+ 161          {
+ 162   1              if(RI)
+ 163   1              {
+ 164   2                      RI = 0;
+ 165   2                      if(COM1.B_RX_OK == 0)
+ 166   2                      {
+ 167   3                              if(COM1.RX_Cnt >= COM_RX1_Lenth)        COM1.RX_Cnt = 0;
+ 168   3                              RX1_Buffer[COM1.RX_Cnt++] = SBUF;
+ 169   3                              COM1.RX_TimeOut = TimeOutSet1;
+ 170   3                      }
+ 171   2              }
+ 172   1      
+ 173   1              if(TI)
+ 174   1              {
+ 175   2                      TI = 0;
+ 176   2                      if(COM1.TX_read != COM1.TX_write)
+ 177   2                      {
+ 178   3                              SBUF = TX1_Buffer[COM1.TX_read];
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:24:53 PAGE 4   
+
+ 179   3                              if(++COM1.TX_read >= COM_TX1_Lenth)             COM1.TX_read = 0;
+ 180   3                      }
+ 181   2                      else    COM1.B_TX_busy = 0;
+ 182   2              }
+ 183   1      }
+ 184          
+ 185          /*************  外部函数和变量声明 *****************/
+ 186          void Timer3Init(void)           //1??@24.000MHz
+ 187          {
+ 188   1              T4T3M |= 0x02;          //?????1T??
+ 189   1              T3L = 0x40;             //??????
+ 190   1              T3H = 0xA2;             //??????
+ 191   1              T4T3M |= 0x08;          //???3????
+ 192   1              IE2 |= B00100000;
+ 193   1      }
+ 194          
+ 195          u16 read_adc(u8 P_NUM)
+ 196          {
+ 197   1      
+ 198   1              P1ASF = 1<<P_NUM;
+ 199   1              ADC_CONTR = B11100000 + P_NUM;
+ 200   1              CLK_DIV &=  B11011111;
+ 201   1              ADC_CONTR = B11101000+ P_NUM;
+ 202   1              delay_us(10);
+ 203   1              while(!(ADC_CONTR&0x10))
+ 204   1              {delay_us(10);}
+ 205   1              ADC_CONTR = B11100000+ P_NUM;
+ 206   1                                                      
+ 207   1              ADC_RESULT = ADC_RES;
+ 208   1              ADC_RESULT<<=2;
+ 209   1              ADC_RESULT+=ADC_RESL;
+ 210   1              ADC_RES = 0;
+ 211   1              ADC_RESL = 0;
+ 212   1              return ADC_RESULT;
+ 213   1      }
+ 214          
+ 215          void Timer3_Init (void) interrupt TIMER3_VECTOR
+ 216          {
+ 217   1              u16     i;
+ 218   1              EA = 0; 
+ 219   1      
+ 220   1                      timer3_cnt++;
+ 221   1                      BUTTON_ADC_RESULT = read_adc(4);
+ 222   1                      
+ 223   1                      if(BUTTON_ADC_RESULT>>2<10){BUTTON1 = 0;}else{BUTTON1 = 1;}
+ 224   1                      if(BUTTON_ADC_RESULT>>2>100 && BUTTON_ADC_RESULT>>2<150){BUTTON2 = 0;}else{BUTTON2 = 1;}
+ 225   1                      if(BUTTON_ADC_RESULT>>2>160 && BUTTON_ADC_RESULT>>2<200){BUTTON3 = 0;}else{BUTTON3 = 1;}
+ 226   1                      
+ 227   1                      if(BUTTON1_DELAY == B11110000){BUTTON1_TRIG = 1;}else{BUTTON1_TRIG = 0;}
+ 228   1                      if(BUTTON2_DELAY == B11110000){BUTTON2_TRIG = 1;}else{BUTTON2_TRIG = 0;}
+ 229   1                      if(BUTTON3_DELAY == B11110000){BUTTON3_TRIG = 1;}else{BUTTON3_TRIG = 0;}
+ 230   1                      
+ 231   1                      BUTTON1_DELAY = (BUTTON1_DELAY<<1) + BUTTON1;
+ 232   1                      BUTTON2_DELAY = (BUTTON2_DELAY<<1) + BUTTON2;
+ 233   1                      BUTTON3_DELAY = (BUTTON3_DELAY<<1) + BUTTON3;
+ 234   1                if(BUTTON1_TRIG ==1||BUTTON3_TRIG ==1)            
+ 235   1                         {   
+ 236   2                              OLED_Clear(); 
+ 237   2                                      if(BUTTON1_TRIG ==1)
+ 238   2                                      {
+ 239   3                                       pp_flag=1;
+ 240   3                                  clear_flag=1;
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:24:53 PAGE 5   
+
+ 241   3                                       clock_flag=0;
+ 242   3                              OLED_ShowNum(64,0,0,1,16); 
+ 243   3                              OLED_ShowNum(56,0,0,1,16); 
+ 244   3                              OLED_ShowNum(48,0,0,1,16);
+ 245   3                              OLED_ShowChar(40,0,'.') ;
+ 246   3                              OLED_ShowNum(32,0,0,1,16);
+ 247   3                                      OLED_ShowNum(24,0,0,1,16);
+ 248   3                                      OLED_ShowNum(16,0,0,1,16);
+ 249   3                                      OLED_ShowNum(8,0,0,1,16);
+ 250   3                                   xxx=0;
+ 251   3                       xx=0;
+ 252   3                       x=0;
+ 253   3                       y=0;
+ 254   3                       yy=0;
+ 255   3                       yyy=0;
+ 256   3                                 xxx_old=xx;
+ 257   3                     xx_old=xxx;
+ 258   3                     x_old=x;
+ 259   3                     y_old=y;
+ 260   3                     yy_old=yy;
+ 261   3                     yyy_old=yyy;
+ 262   3                                  cnt=0;
+ 263   3                                      p=0;
+ 264   3                          }
+ 265   2                                      else
+ 266   2                                      {       pp_flag=0;
+ 267   3                                      clock_flag=0;
+ 268   3                                              clear_flag=1;
+ 269   3                                              OLED_ShowNum(64,0,9,1,16); 
+ 270   3                                  OLED_ShowNum(56,0,9,1,16); 
+ 271   3                                      OLED_ShowNum(48,0,9,1,16);
+ 272   3                                      OLED_ShowChar(40,0,'.') ;
+ 273   3                                      OLED_ShowNum(32,0,9,1,16);
+ 274   3                                      OLED_ShowNum(24,0,9,1,16);
+ 275   3                                      OLED_ShowNum(16,0,9,1,16);
+ 276   3                                      OLED_ShowNum(8,0,9,1,16);
+ 277   3                                         xxx=9;
+ 278   3                         xx=9;
+ 279   3                         x=9;
+ 280   3                         y=9;
+ 281   3                         yy=9;
+ 282   3                         yyy=9;
+ 283   3      
+ 284   3      
+ 285   3                                      }
+ 286   2                                 
+ 287   2                                              
+ 288   2                      }                
+ 289   1                              
+ 290   1      
+ 291   1                       else
+ 292   1              {
+ 293   2                         if(pp_flag==1)
+ 294   2                         {
+ 295   3                      if(BUTTON2_TRIG==1)
+ 296   3                          {
+ 297   4                               clock_flag++;
+ 298   4                   clear_flag=0;
+ 299   4                               }
+ 300   3                          if(clock_flag>0)
+ 301   3                      {
+ 302   4                              xxx++;
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:24:53 PAGE 6   
+
+ 303   4                              if(xxx==10)
+ 304   4                              {
+ 305   5                                      xxx=0;
+ 306   5                                      xx++;
+ 307   5                                      if(xx==10)
+ 308   5                                      {
+ 309   6                                              xx=0;
+ 310   6                                              x++;
+ 311   6                                              if(x==10)
+ 312   6                                              {
+ 313   7                                               x=0;
+ 314   7                                               y++;
+ 315   7                                               if(y==10)
+ 316   7                                               {
+ 317   8                                                y=0;
+ 318   8                                                yy++;
+ 319   8                                                if(yy==10)
+ 320   8                                                {
+ 321   9                                                  yy=0;
+ 322   9                                                  yyy++;
+ 323   9                                                  if(yyy==10)
+ 324   9                                                   yyy=0;
+ 325   9                                                 }
+ 326   8                                                    }
+ 327   7                                                   }
+ 328   6                                      }
+ 329   5      
+ 330   5                                 }
+ 331   4                         }
+ 332   3                     if(clock_flag==2)
+ 333   3                         {    clock_flag--;
+ 334   4                              cnt++;
+ 335   4                                      p++;
+ 336   4      
+ 337   4                                      if(cnt==4)
+ 338   4                                       cnt=1;
+ 339   4                            time=xxx- xxx_old+(xx-xx_old)*10+(x-x_old)*100+(y-y_old)*1000+(yy-yy_old)*10000+(yyy-yyy_old)*1000
+             -00;
+ 340   4                                OLED_ShowCHinese(0,cnt*2,0);
+ 341   4                                OLED_ShowNum(16,cnt*2,p,2,16); 
+ 342   4                                OLED_ShowCHinese(32,cnt*2,3);
+ 343   4      
+ 344   4                              OLED_ShowNum(64,cnt*2,time/100000,1,16); 
+ 345   4                              OLED_ShowNum(72,cnt*2,time%100000/10000,1,16); 
+ 346   4                              OLED_ShowNum(80,cnt*2,time%100000%10000/1000,1,16);
+ 347   4                              OLED_ShowChar(88,cnt*2,'.') ;
+ 348   4                              OLED_ShowNum(96,cnt*2,time%100000%10000%1000/100,1,16);
+ 349   4                              OLED_ShowNum(104,cnt*2,time%100000%10000%1000%100/10,1,16);
+ 350   4                              OLED_ShowNum(112,cnt*2,time%100000%10000%1000%100%10,1,16);
+ 351   4                                 xxx_old=xx;
+ 352   4                     xx_old=xxx;
+ 353   4                     x_old=x;
+ 354   4                     y_old=y;
+ 355   4                     yy_old=yy;
+ 356   4                     yyy_old=yyy;
+ 357   4                         }
+ 358   3                              if(clear_flag==0)
+ 359   3                              {
+ 360   4                              OLED_ShowNum(64,0,xxx,1,16); 
+ 361   4                              OLED_ShowNum(56,0,xx,1,16); 
+ 362   4                              OLED_ShowNum(48,0,x,1,16);
+ 363   4                              OLED_ShowChar(40,0,'.') ;
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:24:53 PAGE 7   
+
+ 364   4                              OLED_ShowNum(32,0,y,1,16);
+ 365   4                              OLED_ShowNum(24,0,yy,1,16);
+ 366   4                              OLED_ShowNum(16,0,yyy,1,16);
+ 367   4                              }
+ 368   3              }
+ 369   2              else
+ 370   2              {
+ 371   3                      if(BUTTON2_TRIG==1)
+ 372   3                          {
+ 373   4                               clock_flag++;
+ 374   4                   clear_flag=0;
+ 375   4                               }
+ 376   3                          if(clock_flag>0)
+ 377   3                      {
+ 378   4                              xxx--;
+ 379   4                              if(xxx==-1)
+ 380   4                              {
+ 381   5                                      xxx=9;
+ 382   5                                      xx--;
+ 383   5                                      if(xx==-1)
+ 384   5                                      {
+ 385   6                                              xx=9;
+ 386   6                                              x--;
+ 387   6                                              if(x==-1)
+ 388   6                                              {
+ 389   7                                               x=9;
+ 390   7                                               y--;
+ 391   7                                               if(y==-1)
+ 392   7                                               {
+ 393   8                                                y=9;
+ 394   8                                                yy--;
+ 395   8                                                if(yy==-1)
+ 396   8                                                {
+ 397   9                                                  yy=9;
+ 398   9                                                  yyy--;
+ 399   9                                                  if(yyy==-1)
+ 400   9                                                              {
+ 401  10                                                                xxx=9;
+ 402  10                                     xx=9;
+ 403  10                                      x=9;
+ 404  10                                      y=9;
+ 405  10                                      yy=9;
+ 406  10                                                   yyy=9;
+ 407  10      
+ 408  10                                                 }
+ 409   9                                                    }
+ 410   8                                                   }
+ 411   7                                      }
+ 412   6      
+ 413   6                                 }
+ 414   5                         }
+ 415   4      
+ 416   4                              if(clear_flag==0)
+ 417   4                              {
+ 418   5                              OLED_ShowNum(64,0,xxx,1,16); 
+ 419   5                              OLED_ShowNum(56,0,xx,1,16); 
+ 420   5                              OLED_ShowNum(48,0,x,1,16);
+ 421   5                              OLED_ShowChar(40,0,'.') ;
+ 422   5                              OLED_ShowNum(32,0,y,1,16);
+ 423   5                              OLED_ShowNum(24,0,yy,1,16);
+ 424   5                              OLED_ShowNum(16,0,yyy,1,16);
+ 425   5                              }         
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:24:53 PAGE 8   
+
+ 426   4      
+ 427   4              }
+ 428   3               
+ 429   3                              
+ 430   3                      }       
+ 431   2                      }               
+ 432   1                      
+ 433   1              EA = 1; 
+ 434   1      }
+*** WARNING C280 IN LINE 217 OF main.c: 'i': unreferenced local variable
+ 435          
+ 436          
+ 437          /**********************************************/
+ 438          void main(void)
+ 439          {
+ 440   1              u16     i;
+ 441   1              u8 k = 0;
+ 442   1              u8 j = 0;
+ 443   1      
+ 444   1              EA = 1;
+ 445   1              
+ 446   1              
+ 447   1              P1M1 = B00000000;
+ 448   1              P1M0 = B00100000;
+ 449   1              
+ 450   1              P2M1 = B10001010;
+ 451   1              P2M0 = B11111111;
+ 452   1              
+ 453   1              P3M1 = B00001000;
+ 454   1              P3M0 = B11111100;
+ 455   1      
+ 456   1              P5M1 = B00010000;
+ 457   1              P5M0 = B00110000;
+ 458   1              
+ 459   1              OLED_Init();                    //初始化OLED  
+ 460   1              OLED_Clear(); 
+ 461   1              OLED_Clear();
+ 462   1                      
+ 463   1              OLED_DrawBMP(0,0,128,8,BIT_LOGO1);
+ 464   1              delay_ms(4000);
+ 465   1              OLED_Clear();
+ 466   1              
+ 467   1      
+ 468   1              OLED_ShowCHinese(16,0,0);
+ 469   1              OLED_ShowCHinese(32,0,1);
+ 470   1              OLED_ShowCHinese(48,0,2);
+ 471   1      
+ 472   1      
+ 473   1      
+ 474   1      
+ 475   1              UART_config();
+*** WARNING C206 IN LINE 475 OF main.c: 'UART_config': missing function-prototype
+ 476   1              Timer3Init();           
+ 477   1      
+ 478   1              while (1)
+ 479   1              {
+ 480   2               
+ 481   2      
+ 482   2                                              
+ 483   2              }
+ 484   1      }
+*** WARNING C280 IN LINE 440 OF main.c: 'i': unreferenced local variable
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:24:53 PAGE 9   
+
+*** WARNING C316 IN LINE 484 OF main.c: unterminated conditionals
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2894    ----
+   CONSTANT SIZE    =   2048    ----
+   XDATA SIZE       =     65      12
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =     20    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  4 WARNING(S),  0 ERROR(S)

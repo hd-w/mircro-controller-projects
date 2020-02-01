@@ -1,0 +1,149 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+G:\wwwwee\LEDÆÁÄ»ÏÔÊ¾´®¿Ú°´¼ü\BITWATCH1602\CÓïÑÔ¿âº¯Êý°æ±¾\UART1.uvproj
+Project File Date:  05/25/2016
+
+<h2>Output:</h2>
+Build target 'Target 1'
+compiling USART1.C...
+compiling main.c...
+main.c(150): warning C280: 'i': unreferenced local variable
+main.c(215): warning C280: 'i': unreferenced local variable
+main.c(283): warning C206: 'UART_config': missing function-prototype
+main.c(248): warning C280: 'i': unreferenced local variable
+main.c(290): warning C316: unterminated conditionals
+compiling delay.c...
+compiling OLED.c...
+src\OLED.c(369): warning C316: unterminated conditionals
+src\OLED.c(163): warning C294: unreachable code
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TIMER3INIT?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_ON?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_OFF?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_SHOWSTRING?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWPIXEL_DIRECT?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWBYANGLE?OLED
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_OLED_DRAWBMP?OLED
+    CALLER1: ?PR?UART1_INT?MAIN
+    CALLER2: ?C_C51STARTUP
+Program Size: data=29.4 xdata=1170 code=10778
+creating hex file from ".\list\UART1"...
+".\list\UART1" - 0 Error(s), 14 Warning(s).
+Build target 'Target 1'
+compiling USART1.C...
+compiling main.c...
+main.c(150): warning C280: 'i': unreferenced local variable
+main.c(215): warning C280: 'i': unreferenced local variable
+main.c(283): warning C206: 'UART_config': missing function-prototype
+main.c(248): warning C280: 'i': unreferenced local variable
+main.c(290): warning C316: unterminated conditionals
+compiling delay.c...
+compiling OLED.c...
+src\OLED.c(369): warning C316: unterminated conditionals
+src\OLED.c(163): warning C294: unreachable code
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TIMER3INIT?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_ON?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_OFF?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_SHOWSTRING?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWPIXEL_DIRECT?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWBYANGLE?OLED
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_OLED_DRAWBMP?OLED
+    CALLER1: ?PR?UART1_INT?MAIN
+    CALLER2: ?C_C51STARTUP
+Program Size: data=29.4 xdata=1170 code=10778
+creating hex file from ".\list\UART1"...
+".\list\UART1" - 0 Error(s), 14 Warning(s).
+Build target 'Target 1'
+compiling USART1.C...
+compiling main.c...
+main.c(162): error C100: unprintable character 0xA3 skipped
+main.c(162): error C100: unprintable character 0xBB skipped
+main.c(163): error C141: syntax error near 'COM1'
+main.c(291): warning C316: unterminated conditionals
+compiling delay.c...
+compiling OLED.c...
+src\OLED.c(369): warning C316: unterminated conditionals
+src\OLED.c(163): warning C294: unreachable code
+Target not created
+Build target 'Target 1'
+compiling USART1.C...
+compiling main.c...
+main.c(150): warning C280: 'i': unreferenced local variable
+main.c(216): warning C280: 'i': unreferenced local variable
+main.c(284): warning C206: 'UART_config': missing function-prototype
+main.c(249): warning C280: 'i': unreferenced local variable
+main.c(291): warning C316: unterminated conditionals
+compiling delay.c...
+compiling OLED.c...
+src\OLED.c(369): warning C316: unterminated conditionals
+src\OLED.c(163): warning C294: unreachable code
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TIMER3INIT?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_ON?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_OFF?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_SHOWSTRING?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWPIXEL_DIRECT?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWBYANGLE?OLED
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_OLED_DRAWBMP?OLED
+    CALLER1: ?PR?UART1_INT?MAIN
+    CALLER2: ?C_C51STARTUP
+Program Size: data=29.4 xdata=1170 code=10799
+creating hex file from ".\list\UART1"...
+".\list\UART1" - 0 Error(s), 14 Warning(s).
+Build target 'Target 1'
+compiling USART1.C...
+compiling main.c...
+main.c(150): warning C280: 'i': unreferenced local variable
+main.c(215): warning C280: 'i': unreferenced local variable
+main.c(283): warning C206: 'UART_config': missing function-prototype
+main.c(248): warning C280: 'i': unreferenced local variable
+main.c(290): warning C316: unterminated conditionals
+compiling delay.c...
+compiling OLED.c...
+src\OLED.c(369): warning C316: unterminated conditionals
+src\OLED.c(163): warning C294: unreachable code
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TIMER3INIT?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_ON?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_OFF?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_SHOWSTRING?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWPIXEL_DIRECT?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWBYANGLE?OLED
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_OLED_DRAWBMP?OLED
+    CALLER1: ?PR?UART1_INT?MAIN
+    CALLER2: ?C_C51STARTUP
+Program Size: data=29.4 xdata=1170 code=10778
+creating hex file from ".\list\UART1"...
+".\list\UART1" - 0 Error(s), 14 Warning(s).

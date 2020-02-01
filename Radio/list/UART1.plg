@@ -1,0 +1,34 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+E:\云盘同步文件夹\开发文档\STM32程序\BITWATCH教学\FM收音\BITWATCH1602\C语言库函数版本\UART1.uvproj
+Project File Date:  05/25/2016
+
+<h2>Output:</h2>
+Build target 'Target 1'
+compiling USART1.C...
+compiling main.c...
+MAIN.C(200): warning C280: 'i': unreferenced local variable
+MAIN.C(336): warning C206: 'UART_config': missing function-prototype
+main.c(387): warning C316: unterminated conditionals
+compiling delay.c...
+compiling OLED.c...
+src\OLED.c(369): warning C316: unterminated conditionals
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?I2C_ACKR?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_ON?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OLED_DISPLAY_OFF?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_SHOWSTRING?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWPIXEL_DIRECT?OLED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_OLED_DRAWBYANGLE?OLED
+Program Size: data=29.5 xdata=108 code=10088
+creating hex file from ".\list\UART1"...
+".\list\UART1" - 0 Error(s), 10 Warning(s).

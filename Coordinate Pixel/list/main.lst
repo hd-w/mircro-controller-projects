@@ -1,0 +1,329 @@
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:35:36 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\list\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c LARGE BROWSE DEBUG OBJECTEXTEND PRINT(.\list\main.lst) OBJECT(.\l
+                    -ist\main.obj)
+
+line level    source
+
+   1          #include <stdio.h>
+   2          #include <string.h>
+   3          #include        "config.h"
+   4          #include  <math.h>    //Keil library
+   5          #include        "binary.h"
+   6          #include        "USART1.h"
+   7          #include        "src\delay.h"
+   8          #include        "src\OLED.h"
+   9          #include        "src\BMP_BACKGROUND.h"
+  10          
+  11          
+  12          //#include "stdlib.h"
+  13          
+  14          #define COM_TX1_Lenth   20
+  15          #define COM_RX1_Lenth   20
+  16          
+  17          COMx_Define     COM1;
+  18          u8      idata TX1_Buffer[COM_TX1_Lenth];        //发送缓冲
+  19          u8      xdata RX1_Buffer[COM_RX1_Lenth];        //接收缓冲
+  20          u8  xx[COM_RX1_Lenth];
+  21          
+  22          
+  23          
+  24          sbit LED=P2^5;
+  25          
+  26          u8 BUTTON1 = 0;
+  27          u8 BUTTON2 = 0;
+  28          u8 BUTTON3 = 0;
+  29          u8 ROW = 0;
+  30          u8 COL = 0;
+  31          u8 COL_xxx=0;
+  32          u8 COL_xx = 0;
+  33          u8 COL_x = 0;
+  34          u16 number = 0;
+  35          // button & status machine
+  36          u8 BUTTON1_DELAY= 1;
+  37          u8 BUTTON2_DELAY= 1;
+  38          u8 BUTTON3_DELAY= 1;
+  39          bit BUTTON1_TRIG = 0;
+  40          bit BUTTON2_TRIG = 0;
+  41          bit BUTTON3_TRIG = 0;
+  42          
+  43          u8 timer3_cnt=0;
+  44          u8 led_cnt=0;
+  45          u16 ADC_RESULT = 0;
+  46          u16 BUTTON_ADC_RESULT = 0;
+  47          
+  48          
+  49          /*************  本地函数声明    **************/
+  50          u8 USART_Configuration(u8 UARTx, COMx_InitDefine *COMx)
+  51          {
+  52   1              u16     i;
+  53   1              u32     j;
+  54   1              
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:35:36 PAGE 2   
+
+  55   1              if(UARTx == USART1)
+  56   1              {
+  57   2                      COM1.id = 1;
+  58   2                      COM1.TX_read    = 0;
+  59   2                      COM1.TX_write   = 0;
+  60   2                      COM1.B_TX_busy  = 0;
+  61   2                      COM1.RX_Cnt     = 0;
+  62   2                      COM1.RX_TimeOut = 0;
+  63   2                      COM1.B_RX_OK    = 0;
+  64   2                      for(i=0; i<COM_TX1_Lenth; i++)  TX1_Buffer[i] = 0;
+  65   2                      for(i=0; i<COM_RX1_Lenth; i++)  RX1_Buffer[i] = 0;
+  66   2      
+  67   2                      if(COMx->UART_Mode > UART_9bit_BRTx)    return 1;       //模式错误
+  68   2                      if(COMx->UART_Polity == PolityHigh)             PS = 1; //高优先级中断
+  69   2                      else                                                                    PS = 0; //低优先级中断
+  70   2                      SCON = (SCON & 0x3f) | COMx->UART_Mode;
+  71   2                      if((COMx->UART_Mode == UART_9bit_BRTx) ||(COMx->UART_Mode == UART_8bit_BRTx))   //可变波特率
+  72   2                      {
+  73   3                              j = (MAIN_Fosc / 4) / COMx->UART_BaudRate;      //按1T计算
+  74   3                              if(j >= 65536UL)        return 2;       //错误
+  75   3                              j = 65536UL - j;
+  76   3                              if(COMx->UART_BRT_Use == BRT_Timer1)
+  77   3                              {
+  78   4                                      TR1 = 0;
+  79   4                                      AUXR &= ~0x01;          //S1 BRT Use Timer1;
+  80   4                                      TMOD &= ~(1<<6);        //Timer1 set As Timer
+  81   4                                      TMOD &= ~0x30;          //Timer1_16bitAutoReload;
+  82   4                                      AUXR |=  (1<<6);        //Timer1 set as 1T mode
+  83   4                                      TH1 = (u8)(j>>8);
+  84   4                                      TL1 = (u8)j;
+  85   4                                      ET1 = 0;        //禁止中断
+  86   4                                      TMOD &= ~0x40;  //定时
+  87   4                                      INT_CLKO &= ~0x02;      //不输出时钟
+  88   4                                      TR1  = 1;
+  89   4                              }
+  90   3                              else if(COMx->UART_BRT_Use == BRT_Timer2)
+  91   3                              {
+  92   4                                      AUXR &= ~(1<<4);        //Timer stop
+  93   4                                      AUXR |= 0x01;           //S1 BRT Use Timer2;
+  94   4                                      AUXR &= ~(1<<3);        //Timer2 set As Timer
+  95   4                                      AUXR |=  (1<<2);        //Timer2 set as 1T mode
+  96   4                                      TH2 = (u8)(j>>8);
+  97   4                                      TL2 = (u8)j;
+  98   4                                      IE2  &= ~(1<<2);        //禁止中断
+  99   4                                      AUXR &= ~(1<<3);        //定时
+ 100   4                                      AUXR |=  (1<<4);        //Timer run enable
+ 101   4                              }
+ 102   3                              else return 2;  //错误
+ 103   3                      }
+ 104   2                      else if(COMx->UART_Mode == UART_ShiftRight)
+ 105   2                      {
+ 106   3                              if(COMx->BaudRateDouble == ENABLE)      AUXR |=  (1<<5);        //固定波特率SysClk/2
+ 107   3                              else                                                            AUXR &= ~(1<<5);        //固定波特率SysClk/12
+ 108   3                      }
+ 109   2                      else if(COMx->UART_Mode == UART_9bit)   //固定波特率SysClk*2^SMOD/64
+ 110   2                      {
+ 111   3                              if(COMx->BaudRateDouble == ENABLE)      PCON |=  (1<<7);        //固定波特率SysClk/32
+ 112   3                              else                                                            PCON &= ~(1<<7);        //固定波特率SysClk/64
+ 113   3                      }
+ 114   2                      if(COMx->UART_Interrupt == ENABLE)      ES = 1; //允许中断
+ 115   2                      else                                                            ES = 0; //禁止中断
+ 116   2                      if(COMx->UART_RxEnable == ENABLE)       REN = 1;        //允许接收
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:35:36 PAGE 3   
+
+ 117   2                      else                                                            REN = 0;        //禁止接收
+ 118   2                      P_SW1 = (P_SW1 & 0x3f) | (COMx->UART_P_SW & 0xc0);      //切换IO
+ 119   2                      if(COMx->UART_RXD_TXD_Short == ENABLE)  PCON2 |=  (1<<4);       //内部短路RXD与TXD, 做中继, ENABLE,DISABLE
+ 120   2                      else                                                                    PCON2 &= ~(1<<4);
+ 121   2                      return  0;
+ 122   2              }
+ 123   1              return 3;       //其它错误
+ 124   1      }
+ 125          
+ 126          
+ 127          /*************** 装载串口发送缓冲 *******************************/
+ 128          
+ 129          void TX1_write2buff(u8 dat)     //写入发送缓冲，指针+1
+ 130          {
+ 131   1              TX1_Buffer[COM1.TX_write] = dat;        //装发送缓冲
+ 132   1              if(++COM1.TX_write >= COM_TX1_Lenth)    COM1.TX_write = 0;
+ 133   1      
+ 134   1              if(COM1.B_TX_busy == 0)         //空闲
+ 135   1              {  
+ 136   2                      COM1.B_TX_busy = 1;             //标志忙
+ 137   2                      TI = 1;                                 //触发发送中断
+ 138   2              }
+ 139   1      }
+ 140          
+ 141          void PrintString1(u8 *puts)
+ 142          {
+ 143   1          for (; *puts != 0;  puts++)  TX1_write2buff(*puts);         //遇到停止符0结束
+ 144   1      }
+ 145          
+ 146          
+ 147          /********************* UART1中断函数************************/
+ 148          void UART1_int (void) interrupt UART1_VECTOR
+ 149          {
+ 150   1       u8 i;
+ 151   1              if(RI)
+ 152   1              {
+ 153   2                      RI = 0;
+ 154   2                      if(COM1.B_RX_OK == 0)
+ 155   2                      {
+ 156   3                      //      if(COM1.RX_Cnt >= COM_RX1_Lenth)        COM1.RX_Cnt = 0;
+ 157   3                              RX1_Buffer[COM1.RX_Cnt++] = SBUF;
+ 158   3                              
+ 159   3                              if(COM1.RX_Cnt==5)
+ 160   3                              { 
+ 161   4      
+ 162   4                                COM1.RX_Cnt = 0;                                      
+ 163   4                                ROW=(RX1_Buffer[0]-48)*100+(RX1_Buffer[1]-48)*10+(RX1_Buffer[2]-48);
+ 164   4                                COL=(RX1_Buffer[3]-48)*10+RX1_Buffer[4]-48;
+ 165   4                                COL_x=COL/8;
+ 166   4                                COL_xx=COL%8;
+ 167   4                                number= COL_x*128+ROW;
+ 168   4                                COL_xxx= 0x01<<COL_xx;
+ 169   4                                 BIT_LOGO1[number]=COL_xxx;
+ 170   4                                      OLED_DrawBMP(0,0,128,8,BIT_LOGO1);
+ 171   4                                //    OLED_ShowNum(0,0,COL_xxx,4,16);
+ 172   4                              //      OLED
+ 173   4                      delay_ms(4000);
+ 174   4      
+ 175   4                              }
+ 176   3                      //      COM1.RX_TimeOut = TimeOutSet1;
+ 177   3                      }
+ 178   2              }
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:35:36 PAGE 4   
+
+ 179   1      
+ 180   1      
+ 181   1      }
+*** WARNING C280 IN LINE 150 OF main.c: 'i': unreferenced local variable
+ 182          
+ 183          /*************  外部函数和变量声明 *****************/
+ 184          void Timer3Init(void)           //1??@24.000MHz
+ 185          {
+ 186   1              T4T3M |= 0x02;          //?????1T??
+ 187   1              T3L = 0x40;             //??????
+ 188   1              T3H = 0xA2;             //??????
+ 189   1              T4T3M |= 0x08;          //???3????
+ 190   1              IE2 |= B00100000;
+ 191   1      }
+ 192          
+ 193          u16 read_adc(u8 P_NUM)
+ 194          {
+ 195   1      
+ 196   1              P1ASF = 1<<P_NUM;
+ 197   1              ADC_CONTR = B11100000 + P_NUM;
+ 198   1              CLK_DIV &=  B11011111;
+ 199   1              ADC_CONTR = B11101000+ P_NUM;
+ 200   1              delay_us(10);
+ 201   1              while(!(ADC_CONTR&0x10))
+ 202   1              {delay_us(10);}
+ 203   1              ADC_CONTR = B11100000+ P_NUM;
+ 204   1                                                      
+ 205   1              ADC_RESULT = ADC_RES;
+ 206   1              ADC_RESULT<<=2;
+ 207   1              ADC_RESULT+=ADC_RESL;
+ 208   1              ADC_RES = 0;
+ 209   1              ADC_RESL = 0;
+ 210   1              return ADC_RESULT;
+ 211   1      }
+ 212          
+ 213          void Timer3_Init (void) interrupt TIMER3_VECTOR
+ 214          {
+ 215   1              u16     i;
+ 216   1              EA = 0; 
+ 217   1              timer3_cnt++;
+ 218   1              if(timer3_cnt == 10)
+ 219   1              {
+ 220   2                      timer3_cnt = 0;
+ 221   2                      led_cnt++;
+ 222   2                      if(led_cnt==20){led_cnt=0;LED =! LED;}
+ 223   2                      
+ 224   2                      BUTTON_ADC_RESULT = read_adc(4);
+ 225   2                      
+ 226   2                      if(BUTTON_ADC_RESULT>>2<10){BUTTON1 = 0;}else{BUTTON1 = 1;}
+ 227   2                      if(BUTTON_ADC_RESULT>>2>100 && BUTTON_ADC_RESULT>>2<150){BUTTON2 = 0;}else{BUTTON2 = 1;}
+ 228   2                      if(BUTTON_ADC_RESULT>>2>160 && BUTTON_ADC_RESULT>>2<200){BUTTON3 = 0;}else{BUTTON3 = 1;}
+ 229   2                      
+ 230   2                      if(BUTTON1_DELAY == B11110000){BUTTON1_TRIG = 1;}else{BUTTON1_TRIG = 0;}
+ 231   2                      if(BUTTON2_DELAY == B11110000){BUTTON2_TRIG = 1;}else{BUTTON2_TRIG = 0;}
+ 232   2                      if(BUTTON3_DELAY == B11110000){BUTTON3_TRIG = 1;}else{BUTTON3_TRIG = 0;}
+ 233   2                      
+ 234   2                      BUTTON1_DELAY = (BUTTON1_DELAY<<1) + BUTTON1;
+ 235   2                      BUTTON2_DELAY = (BUTTON2_DELAY<<1) + BUTTON2;
+ 236   2                      BUTTON3_DELAY = (BUTTON3_DELAY<<1) + BUTTON3;
+ 237   2                      
+ 238   2                      OLED_ShowNum(0,6,BUTTON_ADC_RESULT,4,16);
+ 239   2                      
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:35:36 PAGE 5   
+
+ 240   2              }                       
+ 241   1              EA = 1; 
+ 242   1      }
+*** WARNING C280 IN LINE 215 OF main.c: 'i': unreferenced local variable
+ 243          
+ 244          
+ 245          /**********************************************/
+ 246          void main(void)
+ 247          {
+ 248   1              u16     i;
+ 249   1              u8 k = 0;
+ 250   1              u8 j = 0;
+ 251   1      
+ 252   1              EA = 1;
+ 253   1              
+ 254   1              
+ 255   1              P1M1 = B00000000;
+ 256   1              P1M0 = B00100000;
+ 257   1              
+ 258   1              P2M1 = B10001010;
+ 259   1              P2M0 = B11111111;
+ 260   1              
+ 261   1              P3M1 = B00001000;
+ 262   1              P3M0 = B11111100;
+ 263   1      
+ 264   1              P5M1 = B00010000;
+ 265   1              P5M0 = B00110000;
+ 266   1              
+ 267   1              OLED_Init();                    //初始化OLED  
+ 268   1              OLED_Clear(); 
+ 269   1              OLED_Clear();
+ 270   1                      
+ 271   1              OLED_DrawBMP(0,0,128,8,BIT_LOGO);
+ 272   1              delay_ms(4000);
+ 273   1              OLED_Clear();
+ 274   1              
+ 275   1        
+ 276   1              OLED_ShowCHinese(16,0,0);
+ 277   1              OLED_ShowCHinese(32,0,1);
+ 278   1              OLED_ShowCHinese(48,0,2);
+ 279   1      
+ 280   1      
+ 281   1      
+ 282   1      
+ 283   1              UART_config();
+*** WARNING C206 IN LINE 283 OF main.c: 'UART_config': missing function-prototype
+ 284   1                      
+ 285   1      
+ 286   1              while (1)
+ 287   1              {
+ 288   2                      
+ 289   2              }
+ 290   1      }
+*** WARNING C280 IN LINE 248 OF main.c: 'i': unreferenced local variable
+*** WARNING C316 IN LINE 290 OF main.c: unterminated conditionals
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1335    ----
+   CONSTANT SIZE    =   1024    ----
+   XDATA SIZE       =   1094      13
+   PDATA SIZE       =   ----    ----
+C51 COMPILER V9.53.0.0   MAIN                                                              05/27/2016 20:35:36 PAGE 6   
+
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =     20    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  5 WARNING(S),  0 ERROR(S)
